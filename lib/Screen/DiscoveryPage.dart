@@ -84,7 +84,7 @@ class _DiscoveryPage extends State<DiscoveryPage> {
 
       ),
       body: ListView.builder(
-
+shrinkWrap: true,
         itemCount: results.length,
         itemBuilder: (BuildContext context, index) {
           BluetoothDiscoveryResult result = results[index];
@@ -96,19 +96,22 @@ class _DiscoveryPage extends State<DiscoveryPage> {
               if (snapshot.hasError) {
                 return Text('Something went wrong');
               }
-
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Text("Loading");
               }
 
               return ListView(
-                shrinkWrap: true,
+shrinkWrap: true,
                 children: snapshot.data!.docs.map((DocumentSnapshot document) {
                   Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
-                  return ListTile(
-                    title: Text(data['deviceId']),
-                    subtitle: Text(address),
+                  return
+                  ListTile(
+                  title: Text(device.name!),
+                  subtitle: Text(data['email']),
                   );
+
+
+
                 }).toList(),
               );
             },
@@ -116,6 +119,37 @@ class _DiscoveryPage extends State<DiscoveryPage> {
 
         },
       ),
+    );
+  }
+}
+class Profdata extends StatelessWidget {
+  const Profdata({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body:StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('Profil').snapshots(),
+        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.hasError) {
+            return Text('Something went wrong');
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Text("Loading");
+          }
+
+          return ListView(
+            shrinkWrap: true,
+            children: snapshot.data!.docs.map((DocumentSnapshot document) {
+              Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
+              return ListTile(
+                title: Text(data['name']),
+                subtitle: Text('Age'),
+              );
+            }).toList(),
+          );
+        },
+      ) ,
     );
   }
 }

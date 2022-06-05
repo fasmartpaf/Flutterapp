@@ -1,9 +1,13 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:flutterapp/Firebase_Auth/Models_Class.dart';
 
 import '../Firebase_Auth/LogIn_Page.dart';
@@ -17,6 +21,67 @@ class Profiles extends StatefulWidget {
 }
 
 class _ProfilesState extends State<Profiles> {
+  var _deviceData = '';
+  String _address = '';
+  String _name = '';
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    // initPlatformState();
+    Future.doWhile(() async {
+      // Wait if adapter not enabled
+      if ((await FlutterBluetoothSerial.instance.isEnabled) ?? false) {
+        return false;
+      }
+      await Future.delayed(const Duration(milliseconds: 0xDD));
+      return true;
+    }).then((_) {
+      // Update the address field
+      FlutterBluetoothSerial.instance.address.then((address) {
+        setState(() {
+          _address = address!;
+        });
+      });
+      FlutterBluetoothSerial.instance.name.then((name) {
+        setState(() {
+          _name = name!;
+        });
+      });
+    });
+  }
+
+  // Future<void> initPlatformState() async {
+  //   var deviceData = '';
+  //
+  //   try {
+  //     if (Platform.isAndroid) {
+  //       deviceData = _readAndroidBuildData(await deviceInfoPlugin.androidInfo);
+  //     } else if (Platform.isIOS) {
+  //       deviceData = _readIosDeviceInfo(await deviceInfoPlugin.iosInfo);
+  //     }
+  //   } on PlatformException {
+  //     deviceData = 'Failed to get platform version.';
+  //   }
+  //
+  //   if (!mounted) return;
+  //
+  //   setState(() {
+  //     _deviceData = deviceData;
+  //   });
+  // }
+
+  _readAndroidBuildData(AndroidDeviceInfo build) {
+    return build.device;
+  }
+
+  _readIosDeviceInfo(IosDeviceInfo data) {
+    return data.identifierForVendor;
+  }
+  TextEditingController _vornoma=TextEditingController();
+  TextEditingController _alert=TextEditingController();
+  TextEditingController _device=TextEditingController();
   PickedFile? imageFile;
 
   uploadPic() async {
@@ -64,6 +129,30 @@ class _ProfilesState extends State<Profiles> {
         padding: const EdgeInsets.only(top: 80,left: 10),
         child: ListView(
           children: [
+        StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('Profil').snapshots(),
+        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.hasError) {
+            return Text('Something went wrong');
+          }
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Text("Loading");
+          }
+
+          return ListView(
+            shrinkWrap: true,
+            children: snapshot.data!.docs.map((DocumentSnapshot document) {
+              Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
+              _vornoma.text=data['name'];
+              _alert.text=data['Age'];
+              return ListTile(
+
+              );
+            }).toList(),
+          );
+        },
+      ),
            Padding(
              padding: const EdgeInsets.only(left: 170),
              child: Row(
@@ -88,24 +177,18 @@ class _ProfilesState extends State<Profiles> {
                    showChoiceDialog(context);
                  },
                  child: CircleAvatar(
+                    
                      radius: 70,
                      backgroundColor: Colors.grey.shade300,
-                   child: ClipRect(
-                   child:  (imageFile == null)
+                   child: (imageFile == null)
                        ? const Icon(Icons.person_add_alt_outlined)
                        : Container(
-                       height: 200,
+                       width: 100,
                        decoration: BoxDecoration(
-                           borderRadius: BorderRadius.circular(25)),
-                       child: Container(
-                         child: Image.file(File(imageFile!.path),fit: BoxFit.cover,),
-                         width: 100,
-                         decoration: BoxDecoration(
-                             borderRadius: BorderRadius.circular(30)),
+                         shape: BoxShape.circle
+                           ),
+                       child: Image.file(File(imageFile!.path),fit: BoxFit.cover,)
     )
-    ),
-
-                   )
                ),)),
                Positioned(
                    bottom: 5,
@@ -135,7 +218,7 @@ class _ProfilesState extends State<Profiles> {
             Padding(
               padding: const EdgeInsets.only(left: 30,right: 35),
               child: TextFormField(
-                enabled: false,
+                controller: _vornoma,
                 decoration: InputDecoration(
                     fillColor: Color(0xffDCE6FF),
                     filled: true,
@@ -147,7 +230,7 @@ class _ProfilesState extends State<Profiles> {
             Padding(
               padding: const EdgeInsets.only(left: 30,right: 35),
               child: TextFormField(
-                enabled: false,
+                controller: _alert,
                 decoration: InputDecoration(
                     fillColor: Color(0xffDCE6FF),
                     filled: true,
@@ -159,7 +242,6 @@ class _ProfilesState extends State<Profiles> {
             Padding(
               padding: const EdgeInsets.only(left: 30,right: 35),
               child: TextFormField(
-                enabled: false,
                 decoration: InputDecoration(
                     fillColor: Color(0xffDCE6FF),
                     filled: true,
@@ -171,12 +253,40 @@ class _ProfilesState extends State<Profiles> {
             Padding(
               padding: const EdgeInsets.only(left: 30,right: 35),
               child: TextFormField(
-                enabled: false,
                 decoration: InputDecoration(
                     fillColor: Color(0xffDCE6FF),
                     filled: true,
                     hintText: 'UUID',
                     border: OutlineInputBorder()),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 30,top: 10,right: 30),
+              child: Container(
+                height: 50,
+                width: 320,
+                decoration: BoxDecoration(
+                  color: Colors.pink,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: FlatButton(
+                  onPressed: () {
+                    Center(
+                      child: Text(
+                        _name,
+                        style:
+                        const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                      ),);
+
+                    Text('$_deviceData');
+                     Firebases().Profiledata(_alert.text, _vornoma.text,_device.text,_name );
+                  },
+                  child: const Center(
+                      child: Text(
+                        'update',
+                        style: TextStyle(fontSize: 20, color: Colors.white),
+                      )),
+                ),
               ),
             ),
           ],

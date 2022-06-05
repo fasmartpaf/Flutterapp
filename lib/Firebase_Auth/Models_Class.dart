@@ -28,24 +28,36 @@ class Firebases {
           context, MaterialPageRoute(builder: (context) => BottomNaivgation()));
     }
   }
-
-  void SignUp(String email, String password, BuildContext context) async {
+  void SignUp(String email, String password, BuildContext context,) async {
     var user = await _auth.createUserWithEmailAndPassword(
-        email: email, password: password);
+        email: email, password: password,);
     if (user != null) {
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => LogInPage()));
     }
   }
 
-  void AddData(String email, String password, String deviceid,) async {
+   AddData(String email, String password, String name) async {
     var UId = FirebaseAuth.instance.currentUser?.uid;
+    var Url=FirebaseAuth.instance.currentUser?.photoURL;
     FirebaseFirestore _storeage = FirebaseFirestore.instance;
      await _storeage.collection('User').add({
       'email': email,
       'uid': UId,
-      'deviceId': deviceid,
+      'deviceId': name,
+       "PhotoUrl":Url,
     });
+  }
+  void Profiledata(String Age, String name, String deviceId, String _name,) async {
+    Map<String, dynamic> data = <String, dynamic>{
+      "title": name,
+      "description":Age,
+    };
+
+    var UId = FirebaseAuth.instance.currentUser?.uid;
+    var Url=FirebaseAuth.instance.currentUser?.photoURL;
+    FirebaseFirestore _storeage = FirebaseFirestore.instance;
+    await _storeage.collection('Profil').doc(UId).update(data).whenComplete(AddData(Age, deviceId, name));
   }
 
 }

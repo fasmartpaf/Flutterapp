@@ -20,6 +20,7 @@ class _SignUpState extends State<SignUp> {
   var _deviceData = '';
   String _address = '';
   String _name = '';
+
   @override
   void initState() {
     // TODO: implement initState
@@ -126,11 +127,11 @@ class _SignUpState extends State<SignUp> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: FlatButton(
-                onPressed: () {
+              onPressed: () {
                   Firebases().SignUp(
                       emailcontroller.text, Passwordcontroller.text, context);
                   Firebases().AddData(emailcontroller.text,
-                      Passwordcontroller.text, _name);
+                      Passwordcontroller.text, _name.toString());
                 },
                 child: const Center(
                     child: Text(

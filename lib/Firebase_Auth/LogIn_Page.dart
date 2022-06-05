@@ -13,6 +13,8 @@ class LogInPage extends StatefulWidget {
 class _LogInPageState extends State<LogInPage> {
   TextEditingController emailcontroller=TextEditingController();
   TextEditingController Passwordcontroller=TextEditingController();
+
+  String get deviceid => '';
   @override
   Widget build(BuildContext context) {
     return Scaffold(
